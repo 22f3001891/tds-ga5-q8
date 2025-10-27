@@ -1,0 +1,35 @@
+name: Daily commit
+
+# Run once per day at a specific minute/hour (cron uses UTC)
+on:
+  schedule:
+    - cron: '15 02 * * *'      # runs daily at 02:15 UTC (change below if you want another time)
+  workflow_dispatch: {}        # allows manual trigger from the Actions UI
+
+permissions:
+  contents: write             # allow pushing commits
+
+jobs:
+  daily-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Create/Update file (timestamp)
+        run: |
+          echo "Daily commit triggered at $(date -u)" >> .github/daily-commit-log.txt
+          git status --porcelain
+      - name: Commit by 22f3001891@ds.study.iitm.ac.in
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .github/daily-commit-log.txt
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          git commit -m "chore: daily commit $(date -u)"
+          git push
